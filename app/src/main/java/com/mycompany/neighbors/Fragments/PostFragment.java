@@ -38,7 +38,7 @@ public class PostFragment extends Fragment {
             public void onClick(View view) {
                 String UID = MainActivity.getUID();
                 final String status = etStatus.getText().toString();
-                Firebase fRef = new Firebase(FIREBASE_URL+"/users/"+ UID+"/userName");
+                Firebase fRef = new Firebase(FIREBASE_URL+"/users/"+ UID+"/userName");//to obtain username
 
                 fRef.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -48,6 +48,7 @@ public class PostFragment extends Fragment {
 
                         Firebase fRoot = new Firebase(FIREBASE_URL);
                         fRoot.child("posts").push().setValue(post);
+                        //fRoot.child("posts").setValue(post);
 
                         Toast toast = Toast.makeText(getActivity(),"userName:" + userName, Toast.LENGTH_LONG);
                         toast.show();
