@@ -19,6 +19,8 @@ import java.util.Map;
 /**
  * Created by joshua on 5/25/2016.
  */
+
+
 public class RegisterFragment extends Fragment {
 
     private final String FIREBASE_URL = "https://neighboars.firebaseio.com/";
@@ -30,7 +32,7 @@ public class RegisterFragment extends Fragment {
     private EditText etConfirmPassword;
     private Button bSubmit;
 
-    public void setWidgets(View v){
+    public void registerUser(View v){
 
         etUserName = (EditText)v.findViewById(R.id.etUserName);
         etEmail = (EditText)v.findViewById(R.id.etEmail);
@@ -85,11 +87,12 @@ public class RegisterFragment extends Fragment {
             }
         });
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
 
         View v = inflater.inflate(R.layout.fragment_register,container,false);
-        setWidgets(v);
+        registerUser(v);
 
         return v;
     }

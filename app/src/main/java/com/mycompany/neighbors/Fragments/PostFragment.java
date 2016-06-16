@@ -36,6 +36,7 @@ public class PostFragment extends Fragment {
         bPost.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 String UID = MainActivity.getUID();
                 final String status = etStatus.getText().toString();
                 Firebase fRef = new Firebase(FIREBASE_URL+"/users/"+ UID+"/userName");//to obtain username

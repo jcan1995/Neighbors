@@ -18,6 +18,17 @@ public class User {
     public User(){
     }
 
+    public User(String userName){
+
+        this.UserName = userName;
+
+    }
+
+    public User(String userName, String Email){
+        this.UserName = userName;
+        this.Email = Email;
+
+    }
     public User(String UN, String E, String P){
 
         UserName = UN;
