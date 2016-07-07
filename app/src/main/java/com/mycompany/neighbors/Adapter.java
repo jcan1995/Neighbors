@@ -41,8 +41,6 @@ public class Adapter extends FragmentPagerAdapter {
                 NewsFeedFragment nfFragment = NewsFeedFragment.newInstance(position);
                 mPageReferenceMap.put(position, nfFragment);
                 return nfFragment;
-
-
             case 1:
                 MapFragment mapFragment = MapFragment.newInstance(position);
                 mPageReferenceMap.put(position, mapFragment);

@@ -1,7 +1,5 @@
 package com.mycompany.neighbors.Fragments;
 
-import android.content.Context;
-import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,16 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.mycompany.neighbors.LocationUpdates;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.User;
@@ -37,7 +30,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
     private User mApplicationUser;
-    private String mApplicationUserUID;
+    private static String mApplicationUserUID;
 
 
     public static MapFragment newInstance(int index){
@@ -48,16 +41,22 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
         return mapFragment;
 
     }
-
-    private void sendLocationUpdates(){
+/*
+    public static void sendLocationUpdates(){
 
         //LocationListener
-        mLocationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                Firebase ref1 = new Firebase(FIREBASE_URL + "/users/" + mApplicationUserUID + "/userName");
+       LocationListener mLocationListener = new LocationListener() {
 
-                final LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());//assign latlng
+           @Override
+            public void onLocationChanged(Location location) {
+               //Store location updates under a certain user's tab
+
+                //Firebase ref1 = new Firebase(FIREBASE_URL + "/users/" + mApplicationUserUID + "/userName");
+               Firebase ref1 = new Firebase(FIREBASE_URL + "/users/" + mApplicationUserUID + "/location");
+
+
+
+               final LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());//assign latlng
                 ref1.addValueEventListener(new ValueEventListener() {//Set Value event listener to obtain users userName
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -66,7 +65,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
                         String userName = (String) dataSnapshot.getValue();//get userName;
                         LocationUpdates mLocationupdate = new LocationUpdates(userName,latLng);
                         root.child("locationUpdates").push().setValue(mLocationupdate);
-                        updateUI();//function to receive locatio nupdates and update google map
+                        //updateUI();//function to receive locatio nupdates and update google map
                     }
 
                     @Override
@@ -81,11 +80,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
             }
         };
 
-        mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        LocationManager mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
 
     }
-
+*/
     public void updateUI(){
 
 
@@ -113,7 +112,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback{
         mApplicationUserUID = MainActivity.getUID();
 
         createMap();
-        sendLocationUpdates();
+        //sendLocationUpdates();
 
 /*//This may be a part of updateUI
         mLocationListener = new LocationListener() {
