@@ -1,38 +1,40 @@
 package com.mycompany.neighbors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.android.gms.maps.model.LatLng;
 
 /**
  * Created by joshua on 6/9/2016.
  */
 public class LocationUpdates {
+    public int getLatitude() {
+        return Latitude;
+    }
 
-    private String mUserName;
-    private LatLng mLatLng;
+    public void setLatitude(int latitude) {
+        Latitude = latitude;
+    }
+
+    public int getLongitude() {
+        return Longitude;
+    }
+
+    public void setLongitude(int longitude) {
+        Longitude = longitude;
+    }
+
+    private int Latitude;
+    private int Longitude;
+
 
     @JsonIgnore
     private String key;
 
     public LocationUpdates(){}
 
-    public LocationUpdates(String userName, LatLng latLng){
-
-        mUserName = userName;
-        mLatLng = latLng;
+    public LocationUpdates(int lat, int lon){
+        Latitude = lat;
+        Longitude = lon;
     }
-
-
-    public LatLng getLatLng() {
-        return mLatLng;
-    }
-
-    public void setLatLng(LatLng latLng) {
-        mLatLng = latLng;
-    }
-
-
-
     public String getKey() {
         return key;
     }
@@ -41,11 +43,5 @@ public class LocationUpdates {
         this.key = key;
     }
 
-    public String getUserName() {
-        return mUserName;
-    }
 
-    public void setUserName(String userName) {
-        mUserName = userName;
-    }
 }
