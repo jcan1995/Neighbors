@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
@@ -199,6 +201,33 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
     @Override
     public void onMapReady(GoogleMap googleMap) {
         maps = googleMap;
+
+        if(maps != null){
+            maps.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                @Override
+                public View getInfoWindow(Marker marker) {
+                    return null;
+                }
+
+                @Override
+                public View getInfoContents(Marker marker) {
+
+                    View v = getActivity().getLayoutInflater().inflate(R.layout.info_window,null);
+
+                    TextView tvUserName = (TextView)v.findViewById(R.id.tvuserName);
+                    TextView tvMessage = (TextView)v.findViewById(R.id.tvMessage);
+
+                    tvMessage.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //TODO: Switch to chat fragment
+                        }
+                    });
+
+                    return v;
+                }
+            });
+        }
 
     }
 

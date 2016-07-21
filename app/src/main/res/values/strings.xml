@@ -5,6 +5,7 @@
     <string name="Password">Password</string>
     <string name="ConfirmPassword">Confirm Password</string>
     <string name="Logout">Logout</string>
+    <string name="Message">Message</string>
 
     <string name="Register">Register</string>
     <string name="UserName">User Name</string>
