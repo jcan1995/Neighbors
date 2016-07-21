@@ -1,7 +1,9 @@
 package com.mycompany.neighbors.Fragments;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +25,39 @@ import java.util.ArrayList;
  */
 public class NewsFeedFragment extends ListFragment implements AdapterView.OnItemClickListener{
 
+    private String TAG = "NewsFeedFragment";
     private ListView lv;
     private TextView tvUserName;
     private TextView tvStatus;
     private ArrayList<SinglePost> posts = new ArrayList<>();
     private static final String POSTS_PATH = "https://neighboars.firebaseio.com/posts";
     private Firebase postsRef;
+//    private static final String FRAGMENT_POST = "post";
+
+
+    public String getTAG() {
+        return TAG;
+    }
+
+    public static NewsFeedFragment newInstance(int index){
+        NewsFeedFragment nfFragment = new NewsFeedFragment();
+        Bundle args = new Bundle();
+        args.putInt("index",index);
+        nfFragment.setArguments(args);
+        return nfFragment;
+
+    }
+
+    public void postFragment(){
+        Log.d("TAG", "Doing something else");
+
+        PostFragment postFragment = new PostFragment();
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragContainer,postFragment)
+                .addToBackStack(null)
+                .commit();
+    }
 
     @Override
     public void onViewCreated(View v, Bundle s){
@@ -47,7 +76,7 @@ public class NewsFeedFragment extends ListFragment implements AdapterView.OnItem
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState){
 
-        View v = inflater.inflate(R.layout.fragment_post_feed_item,parent,false);
+        View v = inflater.inflate(R.layout.fragment_post_feed_item,parent,false);//changed
 
         tvUserName = (TextView)v.findViewById(R.id.tvUN);
         tvStatus = (TextView)v.findViewById(R.id.tvStatus);

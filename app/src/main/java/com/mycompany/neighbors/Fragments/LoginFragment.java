@@ -30,10 +30,14 @@ public class LoginFragment extends Fragment {
 
     private EditText etEmail;
     private EditText etPassword;
-
+    private static String mApplicationUID;
     private Button bLogin;
     private Button bRegister;
 
+
+    public static String getApplicationUID(){
+        return mApplicationUID;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -73,6 +77,7 @@ public class LoginFragment extends Fragment {
                         Toast toast = Toast.makeText(getActivity(),"Successfully logged user in",Toast.LENGTH_LONG);
                         toast.show();
 
+                        mApplicationUID = authData.getUid();
                         Intent i = new Intent(getActivity(), MainActivity.class);
                         i.putExtra("uid",authData.getUid());//Send UID to Mainactivity to be used there. Display user's information.
                         startActivity(i);
@@ -92,7 +97,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 RegisterFragment regisFrag = new RegisterFragment();
-                FragmentManager fm =  getFragmentManager();
+                FragmentManager fm = getFragmentManager();
                 fm.beginTransaction()
                         .replace(R.id.Container, regisFrag)
                         .commit();

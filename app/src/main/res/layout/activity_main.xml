@@ -25,7 +25,7 @@
         >
 
         <android.support.design.widget.FloatingActionButton
-            android:id="@+id/bPost"
+            android:id="@+id/bButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"

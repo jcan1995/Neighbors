@@ -1,5 +1,7 @@
 package com.mycompany.neighbors;
 
+import android.location.Location;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -11,6 +13,7 @@ public class User {
     private String UserName;
     private String Email;
     private String Password;
+    private Location UserLocation;
 
     @JsonIgnore
     private String key;
@@ -18,11 +21,32 @@ public class User {
     public User(){
     }
 
+    public User(String userName){
+
+        this.UserName = userName;
+
+    }
+
+    public User(String userName, String Email){
+        this.UserName = userName;
+        this.Email = Email;
+
+    }
     public User(String UN, String E, String P){
 
         UserName = UN;
         Email = E;
         Password = P;
+        UserLocation = null;
+    }
+
+
+    public Location getUserLocation() {
+        return UserLocation;
+    }
+
+    public void setUserLocation(Location userLocation) {
+        UserLocation = userLocation;
     }
 
     public String getKey() {
@@ -57,7 +81,4 @@ public class User {
     public void setEmail(String email) {
         Email = email;
     }
-
-
-
 }

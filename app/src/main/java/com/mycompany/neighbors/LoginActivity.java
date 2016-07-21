@@ -41,7 +41,7 @@ public class LoginActivity extends FragmentActivity {
                     .add(R.id.Container, loginFrag)
                     .commit();
 
-        }else{
+       }else{
             Intent i = new Intent(this, MainActivity.class);
             i.putExtra("uid",firebase.getAuth().getUid());
 
