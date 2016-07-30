@@ -11,6 +11,7 @@ public class SinglePost {
 
     private String userName;
     private String status;
+
     @JsonIgnore
     private String key;
 

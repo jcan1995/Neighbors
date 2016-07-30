@@ -1,6 +1,8 @@
 package com.mycompany.neighbors.Fragments;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -80,7 +82,9 @@ public class LoginFragment extends Fragment {
                         mApplicationUID = authData.getUid();
                         Intent i = new Intent(getActivity(), MainActivity.class);
                         i.putExtra("uid",authData.getUid());//Send UID to Mainactivity to be used there. Display user's information.
-                        startActivity(i);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            startActivity(i, ActivityOptions.makeSceneTransitionAnimation(getActivity()).toBundle());
+                        }
                     }
 
                     @Override

@@ -41,7 +41,8 @@
         android:layout_height="wrap_content"
         android:text="@string/Submit"
         android:id="@+id/bSubmit"
-        />
+        android:background="@color/colorAccent"
+        android:layout_gravity="center_horizontal"/>
 
 
 

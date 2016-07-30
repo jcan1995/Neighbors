@@ -19,10 +19,13 @@ public class Adapter extends FragmentPagerAdapter {
 
 
         private String Fragment[] = {"Posts" , "Map" , "Profile"};
-        public Adapter(FragmentManager fm){
-            super (fm);
-        }
         public Map<Integer,Fragment> mPageReferenceMap = new HashMap();
+
+
+    public Adapter(FragmentManager fm){
+        super (fm);
+    }
+
 
 
     @Override
@@ -55,25 +58,8 @@ public class Adapter extends FragmentPagerAdapter {
         }
 
     }
-    /*
         @Override
-        public Fragment getItem(int position) {
-            switch(position){
-                case 0:
-                    return new NewsFeedFragment();
-                case 1:
-                    return new MapFragment();
-                case 2:
-                    return new ProfileFragment();
-
-                default:
-                    return null;
-            }
-
-        }*/
-
-        @Override
-        public int getCount(){return Fragment.length;}
+        public int getCount(){return 3;}//Fragment.length;}
 
         @Override
         public CharSequence getPageTitle(int position) {

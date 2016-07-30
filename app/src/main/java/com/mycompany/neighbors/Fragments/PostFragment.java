@@ -26,6 +26,7 @@ public class PostFragment extends Fragment {
     private Button bPost;
 
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState){
 

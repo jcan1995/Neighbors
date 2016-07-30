@@ -1,43 +1,35 @@
 package com.mycompany.neighbors.Fragments;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.ListFragment;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.mycompany.neighbors.FragmentLifeCycle;
+import com.mycompany.neighbors.PostsAdapter;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.SinglePost;
 
 import java.util.ArrayList;
 
 /**
- * Created by joshua on 5/25/2016.
+ * Created by joshua on 7/25/2016.
  */
-public class NewsFeedFragment extends ListFragment implements AdapterView.OnItemClickListener{
+public class NewsFeedFragment extends Fragment implements FragmentLifeCycle{
 
-    private String TAG = "NewsFeedFragment";
-    private ListView lv;
-    private TextView tvUserName;
-    private TextView tvStatus;
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+
     private ArrayList<SinglePost> posts = new ArrayList<>();
+
     private static final String POSTS_PATH = "https://neighboars.firebaseio.com/posts";
-    private Firebase postsRef;
-//    private static final String FRAGMENT_POST = "post";
-
-
-    public String getTAG() {
-        return TAG;
-    }
 
     public static NewsFeedFragment newInstance(int index){
         NewsFeedFragment nfFragment = new NewsFeedFragment();
@@ -47,59 +39,89 @@ public class NewsFeedFragment extends ListFragment implements AdapterView.OnItem
         return nfFragment;
 
     }
-
-    public void postFragment(){
-        Log.d("TAG", "Doing something else");
-
-        PostFragment postFragment = new PostFragment();
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.fragContainer,postFragment)
-                .addToBackStack(null)
-                .commit();
-    }
-
     @Override
-    public void onViewCreated(View v, Bundle s){
-
-        lv =  getListView();
-        lv.setOnItemClickListener(this);
+    public void onStart(){
+        super.onStart();
+        queryPosts();
+        Log.d("NFFRAGMENT2","onStart called");
 
     }
 
     @Override
-    public void onCreate(Bundle savedInstance){
-        super.onCreate(savedInstance);
+    public void onPause(){
+        super.onPause();
+        posts.clear();
+        Log.d("NFFRAGMENT2","onPause called");
+
+    }
+    @Override
+    public void onResume(){
+        super.onPause();
+        posts.clear();
+        Log.d("NFFRAGMENT2","onResume called");
 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState){
+    public void onStop(){
+        super.onStop();
+        posts.clear();
+        Log.d("NFFRAGMENT2","onStop called");
 
-        View v = inflater.inflate(R.layout.fragment_post_feed_item,parent,false);//changed
+    }
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        tvUserName = (TextView)v.findViewById(R.id.tvUN);
-        tvStatus = (TextView)v.findViewById(R.id.tvStatus);
+        // Initialize dataset, this data would usually come from a local content provider or
+        // remote server.
+       // queryPosts();
+    }
 
-        postsRef = new Firebase(POSTS_PATH);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+
+        View v = inflater.inflate(R.layout.fragment_news_feed,container,false);
+
+        mRecyclerView = (RecyclerView) v.findViewById(R.id.my_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+
+        mLayoutManager = new LinearLayoutManager(getActivity());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+       // queryPosts();
+        mAdapter = new PostsAdapter(posts);
+        //mRecyclerView.setAdapter(mAdapter);
+
+        return v;
+
+
+        }
+
+
+    private void queryPosts() {
+
+        Firebase postsRef = new Firebase(POSTS_PATH);
         postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
             @Override
             public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
 
                 SinglePost post = dataSnapshot.getValue(SinglePost.class);
-                post.setKey(dataSnapshot.getKey());
+                post.setKey(dataSnapshot.getKey());//getKey() probably returns the UID of JSON field
+
                 posts.add(0, post);
 
-                if(posts.size() > 0) {
-                    PostAdapter adapter = new PostAdapter(posts);
-                    setListAdapter(adapter);
-                }else{
-                    Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
+
+              if(posts.size() > 0) {
+                  mAdapter = new PostsAdapter(posts);
+                  mRecyclerView.setAdapter(mAdapter);
+              }
+//                  setListAdapter(adapter);
+//                }else{
+//                    Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
+//                    toast.show();
+//                }
 
             }
-
             @Override
             public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
 
@@ -121,48 +143,15 @@ public class NewsFeedFragment extends ListFragment implements AdapterView.OnItem
             }
         });
 
-
-        return v;
     }
 
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id){
-
-        SinglePost p = ((PostAdapter) getListAdapter()).getItem(position);
+    public void onPauseFragment() {
 
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-    }
-
-    private class PostAdapter extends ArrayAdapter<SinglePost>{
-
-       public PostAdapter(ArrayList<SinglePost> singlePost){
-           super(getActivity(),android.R.layout.simple_list_item_1,singlePost);
-       }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent){
-
-            if(convertView == null){
-                convertView = getActivity().getLayoutInflater().inflate(R.layout.fragment_post_feed_item,null);
-
-            }
-
-            SinglePost p = getItem(position);
-
-            TextView tvUserName = (TextView)convertView.findViewById(R.id.tvUN);
-            tvUserName.setText(p.getUserName());
-
-            TextView tvStatus = (TextView)convertView.findViewById(R.id.tvStatus);
-            tvStatus.setText(p.getStatus());
-
-
-
-            return convertView;
-        }
+    public void onResumeFragment() {
 
     }
 }

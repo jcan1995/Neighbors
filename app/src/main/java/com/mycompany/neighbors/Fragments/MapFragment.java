@@ -34,6 +34,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.mycompany.neighbors.FragmentLifeCycle;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.User;
@@ -41,7 +42,7 @@ import com.mycompany.neighbors.User;
 /**
  * Created by joshua on 5/25/2016.
  */
-public class MapFragment extends Fragment implements OnMapReadyCallback,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapReadyCallback,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
 
     private GoogleApiClient mGoogleApiClient;
     private final String FIREBASE_URL = "https://neighboars.firebaseio.com/";
@@ -58,6 +59,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
     private User mApplicationUser;
     private static String mApplicationUserUID;
     private CountDownTimer cdt;
+
+
+
+
 
     public static MapFragment newInstance(int index){
         MapFragment mapFragment = new MapFragment();
@@ -123,13 +128,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
                 Log.d("TAG_JOSH", "onFinish");
 
                 // previousLocation = currentLocation;
-                final LatLng coordinates = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
+                final LatLng coordinates = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
 
+                //userMarker is Marker for User.
                 MarkerOptions userMarker = new MarkerOptions();
                 userMarker.position(coordinates);
                 userMarker.title("Me");
-              //  userMarker
                 maps.addMarker(userMarker);
+
+                //These markers will be the markers from other users.
+                getMarkers();
+                addMarkersToMap();
+
                 maps.moveCamera(CameraUpdateFactory.newLatLng(coordinates));
                 maps.animateCamera(CameraUpdateFactory.zoomTo(20));
 
@@ -140,12 +150,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
                 }
 
 
-                final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID + "/userName/location");
+               // final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID + "/userName/location");
+                final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID);
 
                 userRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        userRef.setValue(coordinates);
+                        userRef.child("location").setValue(coordinates);
                     }
 
                     @Override
@@ -159,20 +170,45 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
             }
         }.start();
 
-       // createMap();
         return v;
 
     }
-////////////////////////////////////////LIFECYCLE METHODS///////////////////////////////////////////////////////////
+
+    private void getMarkers() {
+
+        //TODO: Query locations from Firebase and cast into markers. Store markers in ArrayList.
+        //In comments, we are requesting all the posts made by users. Adjust to query for locations instead.
+/*
+  postsRef = new Firebase(POSTS_PATH);
+        postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
+            @Override
+            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+        SinglePost post = dataSnapshot.getValue(SinglePost.class);
+        post.setKey(dataSnapshot.getKey());//getKey() probably returns the UID of JSON field
+*/
+
+    }
+
+    private void addMarkersToMap() {
+
+        //TODO: With the markers, display them on map.
+
+    }
+
+
+    ////////////////////////////////////////LIFECYCLE METHODS///////////////////////////////////////////////////////////
     @Override
     public void onStart(){
         super.onStart();
+        Log.d("MAPFRAGMENT","onStart called");
         mGoogleApiClient.connect();
     }
 
     @Override
     public void onResume(){
         super.onResume();
+        Log.d("MAPFRAGMENT","onResume called");
+
         if(permissionIsGranted){
             if(mGoogleApiClient.isConnected()){
                 requestLocationUpdates();
@@ -184,6 +220,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
     @Override
     public void onStop(){
         cdt.cancel();
+        Log.d("MAPFRAGMENT","onStop called");
+
         if(permissionIsGranted){
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,this);
             mGoogleApiClient.disconnect();
@@ -194,7 +232,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
     @Override
     public void onPause(){
         cdt.cancel();
+        Log.d("MAPFRAGMENT","onPause called");
+
         super.onPause();
+    }
+
+    @Override
+    public void onDestroy(){
+
+        super.onDestroy();
+        Log.d("MAPFRAGMENT","onDestroy called");
+
     }
 ///////////////////////LIFECYCLE METHODS//////////////////////////////////////////////
 
@@ -221,6 +269,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
                         @Override
                         public void onClick(View view) {
                             //TODO: Switch to chat fragment
+
+                            /*
+                            Fragment chatFragment = new ChatFragment();
+                            FragmentManager fragmentManager = getFragmentManager();
+                            fragmentManager.beginTransaction()
+                                    .replace(R.id.fragContainer,chatFragment)
+                                    .addToBackStack(null)
+                                    .commit();
+                                    */
                         }
                     });
 
@@ -257,23 +314,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
     public void onLocationChanged(final Location location) {
 
         currentLocation = location;
-       // previousLocation = location;
         Log.d("TAG_JOSH","Latitude: " +Double.toString(location.getLatitude()));
-        /*
-        final LatLng coordinates = new LatLng(location.getLatitude(),location.getLongitude());
-        final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID + "/userName/location");
 
-        userRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                userRef.setValue(coordinates);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });*/
     }
 
 
@@ -298,6 +340,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
 
     }
 
+    @Override
+    public void onPauseFragment() {
+
+    }
+
+    @Override
+    public void onResumeFragment() {
+
+    }
+
 
 /////////////////////////////////////////OVERRIDE METHODS////////////////////////////////////////////////////////////
 
@@ -305,77 +357,4 @@ public class MapFragment extends Fragment implements OnMapReadyCallback,Location
 
 }
 
-
-/*
-    public static void sendLocationUpdates(){
-
-        //LocationListener
-       LocationListener mLocationListener = new LocationListener() {
-
-           @Override
-            public void onLocationChanged(Location location) {
-               //Store location updates under a certain user's tab
-
-                //Firebase ref1 = new Firebase(FIREBASE_URL + "/users/" + mApplicationUserUID + "/userName");
-               Firebase ref1 = new Firebase(FIREBASE_URL + "/users/" + mApplicationUserUID + "/location");
-
-
-
-               final LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());//assign latlng
-                ref1.addValueEventListener(new ValueEventListener() {//Set Value event listener to obtain users userName
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        Firebase root = new Firebase(FIREBASE_URL);
-                        String userName = (String) dataSnapshot.getValue();//get userName;
-                        LocationUpdates mLocationupdate = new LocationUpdates(userName,latLng);
-                        root.child("locationUpdates").push().setValue(mLocationupdate);
-                        //updateUI();//function to receive locatio nupdates and update google map
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
-
-
-
-
-            }
-        };
-
-        LocationManager mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-
-    }
-
-        //sendLocationUpdates();
-
-/*
-//This may be a part of updateUI
-
-        mLocationListener = new LocationListener() {
-@Override
-public void onLocationChanged(Location location) {
-        if(location != null && maps != null){
-
-        maps.clear();
-        mLatLng = new LatLng(location.getLatitude(),location.getLongitude());
-        //ReceiveUpdates();
-
-        //getLatLng
-        //Make new LocationUpdate object...
-        //Post LocationUpdate object to firebase
-
-        MarkerOptions mp1 = new MarkerOptions();
-        mp1.position(mLatLng);
-        // mp1.title();
-        maps.addMarker(mp1);
-        maps.moveCamera(CameraUpdateFactory.newLatLng(mLatLng));
-        maps.animateCamera(CameraUpdateFactory.zoomTo(20));
-        }
-
-        }
-        };*/
 

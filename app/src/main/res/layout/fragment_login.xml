@@ -5,18 +5,30 @@
               android:orientation="vertical"
     >
 
-    <EditText
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="@string/Email"
-        android:inputType="textEmailAddress"
-        android:id="@+id/etEmail"
-        />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Email"
+        android:id="@+id/tvEmail"/>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/Password"
+        android:inputType="textEmailAddress"
+        android:id="@+id/etEmail"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Password"
+        android:id="@+id/tvPassword"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:inputType="textPassword"
         android:id="@+id/etPassword"
         />
@@ -26,14 +38,19 @@
         android:layout_height="wrap_content"
         android:text="@string/Login"
         android:id="@+id/bLogin"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:background="@color/colorAccent"
+        android:layout_marginBottom="8dp"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/Register"
         android:id="@+id/bRegister"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:background="@color/colorAccent"
+
+        />
 
 
 
