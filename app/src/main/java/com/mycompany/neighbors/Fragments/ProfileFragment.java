@@ -84,11 +84,13 @@ public class ProfileFragment extends Fragment implements FragmentLifeCycle{
 
     @Override
     public void onPauseFragment() {
+        Log.d("ProfileFragment","onPauseFragment called");
 
     }
 
     @Override
     public void onResumeFragment() {
+        Log.d("ProfileFragment","onResumeFragment called");
 
     }
 }

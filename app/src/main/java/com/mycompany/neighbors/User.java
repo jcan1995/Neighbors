@@ -14,7 +14,7 @@ public class User {
     private String Email;
     private String Password;
     private Location UserLocation;
-
+    private boolean addedToFirebase;
     @JsonIgnore
     private String key;
 
@@ -38,6 +38,7 @@ public class User {
         Email = E;
         Password = P;
         UserLocation = null;
+        addedToFirebase = false;
     }
 
 

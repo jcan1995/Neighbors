@@ -7,12 +7,13 @@ import android.support.v4.app.FragmentActivity;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.mycompany.neighbors.Fragments.LoginFragment;
+import com.mycompany.neighbors.utils.Constants;
 
 /**
  * Created by joshua on 5/25/2016.
  */
 public class LoginActivity extends FragmentActivity {
-    private final String FIREBASE_URL = "https://neighboars.firebaseio.com/";
+    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
 
 
     @Override
@@ -30,7 +31,7 @@ public class LoginActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        Firebase.setAndroidContext(this);
+       // Firebase.setAndroidContext(this);
 
         ////////////////////NEW////////////////////////////////////////
         Firebase firebase = new Firebase(FIREBASE_URL);

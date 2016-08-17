@@ -2,12 +2,14 @@ package com.mycompany.neighbors.Fragments;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -38,33 +40,44 @@ import com.mycompany.neighbors.FragmentLifeCycle;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.User;
+import com.mycompany.neighbors.utils.Constants;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by joshua on 5/25/2016.
  */
 public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapReadyCallback,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
 
-    private GoogleApiClient mGoogleApiClient;
-    private final String FIREBASE_URL = "https://neighboars.firebaseio.com/";
-    private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 101;
+    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
 
-    SupportMapFragment mSupportMapFragment;
-    private GoogleMap maps;
-    private boolean permissionIsGranted = false;
+    private String countryName;
+    private String stateName;
+    private String cityName;
 
-    private LatLng mLatLng;
-    private Location currentLocation;
+    private static String mApplicationUserUID;
+    private User mApplicationUser;
+
+    private LatLng coordinates;
+    private static Location currentLocation;
     private Location previousLocation;
 
-    private User mApplicationUser;
-    private static String mApplicationUserUID;
-    private CountDownTimer cdt;
+    private GoogleMap maps;
+    private GoogleApiClient mGoogleApiClient;
+    private SupportMapFragment mSupportMapFragment;
 
 
+    private FloatingActionButton bRefresh;
+    private boolean permissionIsGranted = false;
+    private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 101;
 
-
+    private ArrayList<LatLng> neighborLocations = new ArrayList<>();
 
     public static MapFragment newInstance(int index){
+
         MapFragment mapFragment = new MapFragment();
         Bundle args = new Bundle();
         args.putInt("index",index);
@@ -74,6 +87,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     }
 
     private void createMap(){
+
         mSupportMapFragment = SupportMapFragment.newInstance();
         FragmentManager fm = getFragmentManager();
         mSupportMapFragment.getMapAsync(this);
@@ -88,6 +102,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     }
 
     private void requestLocationUpdates() {
+
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(60000);
@@ -99,78 +114,147 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
             }
             return;
         }
+
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+
     }
 
 /////////////////////////////////////////OVERRIDE METHODS////////////////////////////////////////////////////////////
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+
+        super.onCreate(savedInstanceState);
+        mApplicationUserUID = MainActivity.getUID();
+        Firebase applicationUserRef = new Firebase(FIREBASE_URL + "users/"+ mApplicationUserUID);
+        applicationUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mApplicationUser = dataSnapshot.getValue(User.class);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
 
         View v = inflater.inflate(R.layout.fragment_map,container,false);
-        mApplicationUserUID = MainActivity.getUID();
+
+        googleApiBuilder();
+        initializeScreen(v);
+        createMap();
+
+        return v;
+
+    }
+
+    private void googleApiBuilder() {
 
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        createMap();
 
-        cdt = new CountDownTimer(10000,1000) {
+    }
+
+    private void initializeScreen(View v) {
+
+        bRefresh = (FloatingActionButton)v.findViewById(R.id.bRefresh);
+        bRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onTick(long l) {
-
-            }
-
-            @Override
-            public void onFinish() {
-
-                Log.d("TAG_JOSH", "onFinish");
-
-                // previousLocation = currentLocation;
-                final LatLng coordinates = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-
-                //userMarker is Marker for User.
-                MarkerOptions userMarker = new MarkerOptions();
-                userMarker.position(coordinates);
-                userMarker.title("Me");
-                maps.addMarker(userMarker);
-
-                //These markers will be the markers from other users.
+            public void onClick(View view) {
+                Log.d("FAB","FAB in MapFragment called");
+                geoCoder();
+                sendLocationUpdate();
                 getMarkers();
-                addMarkersToMap();
-
-                maps.moveCamera(CameraUpdateFactory.newLatLng(coordinates));
-                maps.animateCamera(CameraUpdateFactory.zoomTo(20));
-
-
-                if(currentLocation == previousLocation){
-                    return;
-
-                }
-
-
-               // final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID + "/userName/location");
-                final Firebase userRef = new Firebase(FIREBASE_URL + "users/" + mApplicationUserUID);
-
-                userRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        userRef.child("location").setValue(coordinates);
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
-
-
-              this.start();
+                updateUI();
             }
-        }.start();
+        });
 
-        return v;
+    }
+
+    private void geoCoder() {
+
+        Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
+
+        try {
+
+            List<Address> addresses = geocoder.getFromLocation(currentLocation.getLatitude(),currentLocation.getLongitude(),1);
+            countryName = addresses.get(0).getCountryName();
+            cityName = addresses.get(0).getLocality();
+            stateName = addresses.get(0).getAdminArea();
+
+            Log.d("MapFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+
+    private void sendLocationUpdate() {
+
+        final Firebase userRef = new Firebase(FIREBASE_URL);
+
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                userRef.child(countryName).child(stateName).child(cityName).child(mApplicationUser.getKey()).child("location").setValue(coordinates);
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+
+    private void updateUI(){
+
+        coordinates = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+        //TODO: Find Users current city using geocoder. Save location to Firebase based on city.
+
+        //userMarker is Marker for User.
+        MarkerOptions userMarker = new MarkerOptions();
+        userMarker.position(coordinates);
+        userMarker.title("Me");
+        maps.clear();
+        maps.addMarker(userMarker);
+
+        //TODO: Construct for loop to iterate through array filled of LatLngs
+
+        for(int i = 0; i < neighborLocations.size(); i++){
+
+            MarkerOptions neighborMarker = new MarkerOptions();
+            neighborMarker.position(neighborLocations.get(i));
+
+
+        }
+
+//        MarkerOptions userMarker = new MarkerOptions();
+//        userMarker.position(coordinates);
+//        userMarker.title("Me");
+//        maps.addMarker(userMarker);
+
+
+        maps.moveCamera(CameraUpdateFactory.newLatLng(coordinates));
+        maps.animateCamera(CameraUpdateFactory.zoomTo(20));
+
+
 
     }
 
@@ -178,6 +262,8 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
         //TODO: Query locations from Firebase and cast into markers. Store markers in ArrayList.
         //In comments, we are requesting all the posts made by users. Adjust to query for locations instead.
+
+
 /*
   postsRef = new Firebase(POSTS_PATH);
         postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
@@ -219,7 +305,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     @Override
     public void onStop(){
-        cdt.cancel();
+
         Log.d("MAPFRAGMENT","onStop called");
 
         if(permissionIsGranted){
@@ -231,10 +317,10 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     @Override
     public void onPause(){
-        cdt.cancel();
-        Log.d("MAPFRAGMENT","onPause called");
 
+        Log.d("MAPFRAGMENT","onPause called");
         super.onPause();
+
     }
 
     @Override
@@ -248,9 +334,11 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
         maps = googleMap;
 
         if(maps != null){
+
             maps.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
                 @Override
                 public View getInfoWindow(Marker marker) {
@@ -290,6 +378,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+
         Log.d("TAG_JOSH", "onConnected");
 
         requestLocationUpdates();
@@ -323,6 +412,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
 
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+
         switch(requestCode){
             case MY_PERMISSIONS_REQUEST_FINE_LOCATION:
                 if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
@@ -342,19 +432,15 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     @Override
     public void onPauseFragment() {
-
+        Log.d("MapFragment","onPauseFragment called");
     }
 
     @Override
     public void onResumeFragment() {
-
-    }
-
+        Log.d("MapFragment","onResumeFragment called");
+}
 
 /////////////////////////////////////////OVERRIDE METHODS////////////////////////////////////////////////////////////
-
-
-
 }
 
 
