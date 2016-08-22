@@ -61,7 +61,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     private static String mApplicationUserUID;
     private User mApplicationUser;
 
-    private LatLng coordinates;
+    private LatLng mApplicationUserCoordinates;
     private static Location currentLocation;
     private Location previousLocation;
 
@@ -75,6 +75,8 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 101;
 
     private ArrayList<LatLng> neighborLocations = new ArrayList<>();
+
+    private ArrayList<User> mUsers = new ArrayList<>();
 
     public static MapFragment newInstance(int index){
 
@@ -125,11 +127,15 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     public void onCreate(Bundle savedInstanceState){
 
         super.onCreate(savedInstanceState);
+        Log.d("MapFragment","inside onCreate");//<-----------8/17
+
         mApplicationUserUID = MainActivity.getUID();
         Firebase applicationUserRef = new Firebase(FIREBASE_URL + "users/"+ mApplicationUserUID);
         applicationUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
                 mApplicationUser = dataSnapshot.getValue(User.class);
             }
 
@@ -170,25 +176,35 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
             @Override
             public void onClick(View view) {
                 Log.d("FAB","FAB in MapFragment called");
-                geoCoder();
-                sendLocationUpdate();
-                getMarkers();
-                updateUI();
+              if(currentLocation != null && mApplicationUser != null) {
+
+                  mUsers.clear();
+                  geoCoder();// < ---- DONE
+                  sendUserUpdate();// < ---- DONE
+                  getUsers();
+                  updateUI();
+
+              }else{
+                  Toast toast = Toast.makeText(getActivity(),"Initializing Location...Please wait.", Toast.LENGTH_LONG);
+                  toast.show();
+              }
             }
         });
 
     }
 
     private void geoCoder() {
+        Log.d("MAPFRAGMENT","inside geoCoder");
 
         Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
 
-        try {
+        try{
 
             List<Address> addresses = geocoder.getFromLocation(currentLocation.getLatitude(),currentLocation.getLongitude(),1);
-            countryName = addresses.get(0).getCountryName();
-            cityName = addresses.get(0).getLocality();
-            stateName = addresses.get(0).getAdminArea();
+
+            countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
+            cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
+            stateName = (addresses.get(0).getAdminArea()).replaceAll("\\s+","");
 
             Log.d("MapFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
 
@@ -201,7 +217,8 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
 
 
-    private void sendLocationUpdate() {
+    private void sendUserUpdate() {
+        Log.d("MAPFRAGMENT","inside sendUserUpdate");
 
         final Firebase userRef = new Firebase(FIREBASE_URL);
 
@@ -209,7 +226,9 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                userRef.child(countryName).child(stateName).child(cityName).child(mApplicationUser.getKey()).child("location").setValue(coordinates);
+                //userRef.child(countryName).child(stateName).child(cityName).child(mApplicationUser.getKey()).child("location").setValue(currentLocation);
+
+                    userRef.child(countryName).child(stateName).child(cityName).child("currentUsers").setValue(mApplicationUser);
 
             }
 
@@ -222,63 +241,69 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     }
 
 
+    private void getUsers() {
+        Log.d("MAPFRAGMENT","getUsers called");
+
+        //  Iterate through users in firebase and store in arraylist
+        mUsers.clear();//First clear ArrayList in case it already consists of UserMarkers objects
+
+
+        Firebase currentUsersRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
+        Log.d("usersfilepath",FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
+        currentUsersRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+//                User user = dataSnapshot.getValue(User.class);
+//                user.setKey(dataSnapshot.getKey());
+//                mUsers.add(user);// < ---- OR mUsers.add(0, post);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+        Log.d("USERARRAYSIZE","Size of mUsers in getUsers(): " + mUsers.size());
+
+    }
+
     private void updateUI(){
+        Log.d("MAPFRAGMENT","updateUI called");
 
-        coordinates = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+        Log.d("USERARRAYSIZE","Size of mUsers in updateUI(): " + mUsers.size());
 
-        //TODO: Find Users current city using geocoder. Save location to Firebase based on city.
-
-        //userMarker is Marker for User.
-        MarkerOptions userMarker = new MarkerOptions();
-        userMarker.position(coordinates);
-        userMarker.title("Me");
+        // LatLng appUserLatLng = new LatLng(mApplicationUser.getUserLocation().getLatitude(),mApplicationUser.getUserLocation().getLongitude());
         maps.clear();
-        maps.addMarker(userMarker);
 
-        //TODO: Construct for loop to iterate through array filled of LatLngs
+        for(int i = 0; i < mUsers.size(); i++){
 
-        for(int i = 0; i < neighborLocations.size(); i++){
-
-            MarkerOptions neighborMarker = new MarkerOptions();
-            neighborMarker.position(neighborLocations.get(i));
-
+            LatLng userLatLng = new LatLng(mUsers.get(i).getUserLocation().getLatitude(),mUsers.get(i).getUserLocation().getLongitude());
+            MarkerOptions userMarker = new MarkerOptions();
+            userMarker.position(userLatLng);
+            userMarker.title(mUsers.get(i).getUserName());
+            // maps.clear();
+            maps.addMarker(userMarker);
 
         }
 
-//        MarkerOptions userMarker = new MarkerOptions();
-//        userMarker.position(coordinates);
-//        userMarker.title("Me");
-//        maps.addMarker(userMarker);
-
-
-        maps.moveCamera(CameraUpdateFactory.newLatLng(coordinates));
+        maps.moveCamera(CameraUpdateFactory.newLatLng(mApplicationUserCoordinates));
         maps.animateCamera(CameraUpdateFactory.zoomTo(20));
-
-
-
-    }
-
-    private void getMarkers() {
-
-        //TODO: Query locations from Firebase and cast into markers. Store markers in ArrayList.
-        //In comments, we are requesting all the posts made by users. Adjust to query for locations instead.
-
-
-/*
-  postsRef = new Firebase(POSTS_PATH);
-        postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
-            @Override
-            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-        SinglePost post = dataSnapshot.getValue(SinglePost.class);
-        post.setKey(dataSnapshot.getKey());//getKey() probably returns the UID of JSON field
-*/
-
-    }
-
-    private void addMarkersToMap() {
-
-        //TODO: With the markers, display them on map.
-
     }
 
 
@@ -402,7 +427,16 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     @Override
     public void onLocationChanged(final Location location) {
 
+        Log.d("MapFragment","inside onLocationChanged");
+
         currentLocation = location;
+
+        mApplicationUserCoordinates = null;
+        mApplicationUserCoordinates = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
+
+        if(mApplicationUser != null) {
+            mApplicationUser.setUserLocation(location);//Set the location attribute of the current user to its current location.
+        }
         Log.d("TAG_JOSH","Latitude: " +Double.toString(location.getLatitude()));
 
     }

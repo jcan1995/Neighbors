@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * Created by joshua on 6/9/2016.
  */
 public class LocationUpdates {
+
     public int getLatitude() {
         return Latitude;
     }

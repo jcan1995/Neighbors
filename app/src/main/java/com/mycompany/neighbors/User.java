@@ -3,18 +3,20 @@ package com.mycompany.neighbors;
 import android.location.Location;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Created by joshua on 5/25/2016.
  */
-public class User {
 
+@JsonIgnoreProperties(ignoreUnknown=true)
+public class User {
 
     private String UserName;
     private String Email;
     private String Password;
     private Location UserLocation;
-    private boolean addedToFirebase;
+
     @JsonIgnore
     private String key;
 
@@ -34,11 +36,18 @@ public class User {
     }
     public User(String UN, String E, String P){
 
-        UserName = UN;
-        Email = E;
-        Password = P;
-        UserLocation = null;
-        addedToFirebase = false;
+        this.UserName = UN;
+        this.Email = E;
+        this.Password = P;
+        this.UserLocation = null;
+    }
+
+    public User(String UN, String E, String P, Location location){
+
+        this.UserName = UN;
+        this.Email = E;
+        this.Password = P;
+        this.UserLocation = location;
     }
 
 

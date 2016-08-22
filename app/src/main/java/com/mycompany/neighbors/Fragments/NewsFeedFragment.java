@@ -114,9 +114,9 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
             List<Address> addresses = geocoder.getFromLocation(currentLocation.getLatitude(),currentLocation.getLongitude(),1);
 
-            countryName = addresses.get(0).getCountryName();
-            cityName = addresses.get(0).getLocality();
-            stateName = addresses.get(0).getAdminArea();
+            countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
+            cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
+            stateName = (addresses.get(0).getAdminArea()).replaceAll("\\s+","");
 
             Log.d("MapFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
 
@@ -147,7 +147,7 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
                 if(posts.size() > 0) {
                    mAdapter = new PostsAdapter(posts);
                    mRecyclerView.setAdapter(mAdapter);
-                   }else{
+                   } else{
                           Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
                           toast.show();
                    }
@@ -280,8 +280,8 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
             geoCoder();
 
-        if(posts.size() > 0) {
-            queryPosts();//<------------ 8/11
+        if(posts.size() == 0) {
+            queryPosts();
         }
 
     }

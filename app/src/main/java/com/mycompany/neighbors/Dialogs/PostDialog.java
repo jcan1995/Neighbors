@@ -153,10 +153,10 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
     private void geoCoder() {
         Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
         try {
-            List<Address> userBroadLocation = geocoder.getFromLocation(usersLocation.getLatitude(),usersLocation.getLongitude(),1);
-            countryName = userBroadLocation.get(0).getCountryName();
-            cityName = userBroadLocation.get(0).getLocality();
-            stateName = userBroadLocation.get(0).getAdminArea();
+            List<Address> addresses = geocoder.getFromLocation(usersLocation.getLatitude(),usersLocation.getLongitude(),1);
+            countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
+            cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
+            stateName = (addresses.get(0).getAdminArea()).replaceAll("\\s+","");
             Log.d("RegisterFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
 
         } catch (IOException e) {
