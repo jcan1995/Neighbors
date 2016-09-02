@@ -8,6 +8,13 @@
     android:id="@+id/map_frag">
 
 
+    <ImageButton
+        android:id="@+id/left_nav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|start"
+        android:src="@drawable/ic_keyboard_arrow_left_black_24dp" />
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/bRefresh"
         android:layout_width="wrap_content"

@@ -50,7 +50,6 @@ public class PostFragment extends Fragment {
 
                         Firebase fRoot = new Firebase(FIREBASE_URL);
                         fRoot.child("posts").push().setValue(post);
-                        //fRoot.child("posts").setValue(post);
 
                         Toast toast = Toast.makeText(getActivity(),"userName:" + userName, Toast.LENGTH_LONG);
                         toast.show();

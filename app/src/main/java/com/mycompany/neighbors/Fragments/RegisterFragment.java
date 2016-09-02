@@ -82,7 +82,8 @@ public class RegisterFragment extends Fragment {
         //TODO: Check if email is valid "@"
         //TODO: Check if password is valid. (strong)
 
-        final User user = new User(UserName, Email, Password);//new
+     //   Location location = new Location("");
+        final User user = new User(Email, 0.0, 0.0, Password, UserName);//new
         fRef.createUser(Email,Password, new Firebase.ValueResultHandler<Map<String, Object>>(){
 
             @Override

@@ -1,21 +1,19 @@
 package com.mycompany.neighbors;
 
-import android.location.Location;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Created by joshua on 5/25/2016.
  */
 
-@JsonIgnoreProperties(ignoreUnknown=true)
+
 public class User {
 
     private String UserName;
     private String Email;
     private String Password;
-    private Location UserLocation;
+    private Double Latitude;
+    private Double Longitude;
 
     @JsonIgnore
     private String key;
@@ -23,40 +21,22 @@ public class User {
     public User(){
     }
 
-    public User(String userName){
+//    public User(String E, String P, String UN){
+//
+//        this.Email = E;
+//        this.Password = P;
+//        this.UserName = UN;
+//
+//    }
 
-        this.UserName = userName;
-
-    }
-
-    public User(String userName, String Email){
-        this.UserName = userName;
-        this.Email = Email;
-
-    }
-    public User(String UN, String E, String P){
+    public User(String E, Double latitude, Double longitude, String P, String UN){
 
         this.UserName = UN;
         this.Email = E;
         this.Password = P;
-        this.UserLocation = null;
-    }
+        this.Latitude = latitude;
+        this.Longitude = longitude;
 
-    public User(String UN, String E, String P, Location location){
-
-        this.UserName = UN;
-        this.Email = E;
-        this.Password = P;
-        this.UserLocation = location;
-    }
-
-
-    public Location getUserLocation() {
-        return UserLocation;
-    }
-
-    public void setUserLocation(Location userLocation) {
-        UserLocation = userLocation;
     }
 
     public String getKey() {
@@ -90,5 +70,21 @@ public class User {
 
     public void setEmail(String email) {
         Email = email;
+    }
+
+    public Double getLatitude() {
+        return Latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        Latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return Longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        Longitude = longitude;
     }
 }

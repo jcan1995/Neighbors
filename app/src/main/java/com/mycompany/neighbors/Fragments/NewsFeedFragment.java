@@ -110,9 +110,20 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
         Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
 
+        if (geocoder == null) {
+
+            Log.d("NewsFeedFragment","geocoder is null");
+
+        }
+
         try {
 
             List<Address> addresses = geocoder.getFromLocation(currentLocation.getLatitude(),currentLocation.getLongitude(),1);
+
+            if(addresses == null) {
+                Log.d("TAG_JOSH", "addresses is null");
+            }
+            Log.d("TAG_JOSH", "addresses is null");
 
             countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
             cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
@@ -122,8 +133,9 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
+            Log.d("TAG_JOSH",e.getMessage().toString());
 
+        }
 
     }
 
@@ -210,7 +222,8 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
     @Override
     public void onResume(){
 
-        super.onPause();
+        super.onResume();
+        queryPosts();
         Log.d("NewsFeedFragment","onResume called");
 
     }
@@ -274,10 +287,15 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
     @Override
     public void onLocationChanged(Location location) {
-
         Log.d("NewsFeedFragment", "inside onLocationChanged");
         currentLocation = location;
 
+        posts.clear();
+
+        if(location == null){
+            Log.d("NewsFeedFragment", "location is null");
+
+        }
             geoCoder();
 
         if(posts.size() == 0) {

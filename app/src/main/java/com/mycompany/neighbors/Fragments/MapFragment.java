@@ -13,11 +13,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
@@ -34,7 +35,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.mycompany.neighbors.FragmentLifeCycle;
 import com.mycompany.neighbors.MainActivity;
@@ -53,7 +53,9 @@ import java.util.Locale;
 public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapReadyCallback,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
 
     private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
+    private ViewPager v;
 
+    private boolean assigned = false;
     private String countryName;
     private String stateName;
     private String cityName;
@@ -71,10 +73,11 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
 
     private FloatingActionButton bRefresh;
+    private ImageButton mImageButton;
+
+
     private boolean permissionIsGranted = false;
     private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 101;
-
-    private ArrayList<LatLng> neighborLocations = new ArrayList<>();
 
     private ArrayList<User> mUsers = new ArrayList<>();
 
@@ -107,7 +110,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(60000);
+        mLocationRequest.setInterval(5000);
 
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -128,6 +131,13 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
         super.onCreate(savedInstanceState);
         Log.d("MapFragment","inside onCreate");//<-----------8/17
+
+        //////////////////NEW 8/24/////////////////////
+
+//      v = (ViewPager) getActivity().findViewById(R.id.vPager);
+
+        //////////////////NEW 8/24/////////////////////
+
 
         mApplicationUserUID = MainActivity.getUID();
         Firebase applicationUserRef = new Firebase(FIREBASE_URL + "users/"+ mApplicationUserUID);
@@ -151,6 +161,7 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
         View v = inflater.inflate(R.layout.fragment_map,container,false);
 
+
         googleApiBuilder();
         initializeScreen(v);
         createMap();
@@ -171,6 +182,26 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     private void initializeScreen(View v) {
 
+        ///////////NEW 8/24/////////////////
+        mImageButton = (ImageButton)v.findViewById(R.id.left_nav);
+        mImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+              ViewPager v = (ViewPager) getActivity().findViewById(R.id.vPager);
+
+                int tab = v.getCurrentItem();
+                if(tab > 0){
+                    tab--;
+                    v.setCurrentItem(tab);
+                }else if(tab == 0){
+                    v.setCurrentItem(tab);
+                }
+            }
+        });
+
+        ///////////NEW 8/24/////////////////
+
+
         bRefresh = (FloatingActionButton)v.findViewById(R.id.bRefresh);
         bRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -182,12 +213,12 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
                   geoCoder();// < ---- DONE
                   sendUserUpdate();// < ---- DONE
                   getUsers();
-                  updateUI();
+                 // updateUI();
 
               }else{
                   Toast toast = Toast.makeText(getActivity(),"Initializing Location...Please wait.", Toast.LENGTH_LONG);
                   toast.show();
-              }
+              }//TODO: Check if location services are turned on. If not display toast
             }
         });
 
@@ -221,22 +252,9 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
         Log.d("MAPFRAGMENT","inside sendUserUpdate");
 
         final Firebase userRef = new Firebase(FIREBASE_URL);
+        final User newUser = new User(mApplicationUser.getEmail(),currentLocation.getLatitude(),currentLocation.getLongitude(),mApplicationUser.getPassword(),mApplicationUser.getUserName());
 
-        userRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                //userRef.child(countryName).child(stateName).child(cityName).child(mApplicationUser.getKey()).child("location").setValue(currentLocation);
-
-                    userRef.child(countryName).child(stateName).child(cityName).child("currentUsers").setValue(mApplicationUser);
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        userRef.child(countryName).child(stateName).child(cityName).child("currentUsers").child(mApplicationUserUID).setValue(newUser);
 
     }
 
@@ -247,16 +265,20 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
         //  Iterate through users in firebase and store in arraylist
         mUsers.clear();//First clear ArrayList in case it already consists of UserMarkers objects
 
-
         Firebase currentUsersRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
+
         Log.d("usersfilepath",FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
         currentUsersRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
 
-//                User user = dataSnapshot.getValue(User.class);
-//                user.setKey(dataSnapshot.getKey());
-//                mUsers.add(user);// < ---- OR mUsers.add(0, post);
+                User user = dataSnapshot.getValue(User.class);
+                user.setKey(dataSnapshot.getKey());
+                mUsers.add(user);// < ---- OR mUsers.add(0, post);
+                Log.d("USERARRAYSIZE","In onChildAdded: " + mUsers.size());
+
+                updateUI(mUsers);
+
             }
 
             @Override
@@ -283,21 +305,20 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
     }
 
-    private void updateUI(){
+    private void updateUI(ArrayList<User> users){
         Log.d("MAPFRAGMENT","updateUI called");
 
-        Log.d("USERARRAYSIZE","Size of mUsers in updateUI(): " + mUsers.size());
-
-        // LatLng appUserLatLng = new LatLng(mApplicationUser.getUserLocation().getLatitude(),mApplicationUser.getUserLocation().getLongitude());
+        Log.d("USERARRAYSIZE","Size of mUsers in updateUI(): " + users.size());
         maps.clear();
 
-        for(int i = 0; i < mUsers.size(); i++){
+        for(int i = 0; i < users.size(); i++){
 
-            LatLng userLatLng = new LatLng(mUsers.get(i).getUserLocation().getLatitude(),mUsers.get(i).getUserLocation().getLongitude());
+            LatLng userLatLng = new LatLng(users.get(i).getLatitude(),users.get(i).getLongitude());
+            Log.d("UserDetails","UserName: " + users.get(i));
+
             MarkerOptions userMarker = new MarkerOptions();
             userMarker.position(userLatLng);
-            userMarker.title(mUsers.get(i).getUserName());
-            // maps.clear();
+            userMarker.title(users.get(i).getUserName());
             maps.addMarker(userMarker);
 
         }
@@ -362,42 +383,42 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
         maps = googleMap;
 
-        if(maps != null){
-
-            maps.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-                @Override
-                public View getInfoWindow(Marker marker) {
-                    return null;
-                }
-
-                @Override
-                public View getInfoContents(Marker marker) {
-
-                    View v = getActivity().getLayoutInflater().inflate(R.layout.info_window,null);
-
-                    TextView tvUserName = (TextView)v.findViewById(R.id.tvuserName);
-                    TextView tvMessage = (TextView)v.findViewById(R.id.tvMessage);
-
-                    tvMessage.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            //TODO: Switch to chat fragment
-
-                            /*
-                            Fragment chatFragment = new ChatFragment();
-                            FragmentManager fragmentManager = getFragmentManager();
-                            fragmentManager.beginTransaction()
-                                    .replace(R.id.fragContainer,chatFragment)
-                                    .addToBackStack(null)
-                                    .commit();
-                                    */
-                        }
-                    });
-
-                    return v;
-                }
-            });
-        }
+//        if(maps != null){
+//
+//            maps.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+//                @Override
+//                public View getInfoWindow(Marker marker) {
+//                    return null;
+//                }
+//
+//                @Override
+//                public View getInfoContents(Marker marker) {
+//
+//                    View v = getActivity().getLayoutInflater().inflate(R.layout.info_window,null);
+//
+//                    TextView tvUserName = (TextView)v.findViewById(R.id.tvuserName);
+//                    TextView tvMessage = (TextView)v.findViewById(R.id.tvMessage);
+//
+//                    tvMessage.setOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View view) {
+//                            //TODO: Switch to chat fragment
+//
+//                            /*
+//                            Fragment chatFragment = new ChatFragment();
+//                            FragmentManager fragmentManager = getFragmentManager();
+//                            fragmentManager.beginTransaction()
+//                                    .replace(R.id.fragContainer,chatFragment)
+//                                    .addToBackStack(null)
+//                                    .commit();
+//                                    */
+//                        }
+//                    });
+//
+//                    return v;
+//                }
+//            });
+//        }
 
     }
 
@@ -434,9 +455,11 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
         mApplicationUserCoordinates = null;
         mApplicationUserCoordinates = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
 
-        if(mApplicationUser != null) {
-            mApplicationUser.setUserLocation(location);//Set the location attribute of the current user to its current location.
-        }
+//        if(mApplicationUser != null) {
+//            mApplicationUser.setUserLocation(location);//Set the location attribute of the current user to its current location.
+//        }
+
+
         Log.d("TAG_JOSH","Latitude: " +Double.toString(location.getLatitude()));
 
     }
@@ -446,6 +469,9 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
 
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+
+        Log.d("grantResults"," " + grantResults.toString());
+
 
         switch(requestCode){
             case MY_PERMISSIONS_REQUEST_FINE_LOCATION:

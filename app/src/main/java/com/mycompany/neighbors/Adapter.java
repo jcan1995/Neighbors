@@ -18,8 +18,10 @@ import java.util.Map;
 public class Adapter extends FragmentPagerAdapter {
 
 
-        private String Fragment[] = {"Posts" , "Map" , "Profile"};
-        public Map<Integer,Fragment> mPageReferenceMap = new HashMap();
+//        private String Fragment[] = {"Posts" , "Map" , "Profile"};
+    private String Fragment[] = {"Posts" , "Map" , "Profile"};
+
+    public Map<Integer,Fragment> mPageReferenceMap = new HashMap();
 
 
     public Adapter(FragmentManager fm){
@@ -59,7 +61,7 @@ public class Adapter extends FragmentPagerAdapter {
 
     }
         @Override
-        public int getCount(){return 3;}//Fragment.length;}
+        public int getCount(){return 2;}//Fragment.length;}//CHANGED 8/24
 
         @Override
         public CharSequence getPageTitle(int position) {

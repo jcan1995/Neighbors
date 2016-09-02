@@ -157,7 +157,6 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
             countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
             cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
             stateName = (addresses.get(0).getAdminArea()).replaceAll("\\s+","");
-            Log.d("RegisterFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -194,8 +193,6 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
     public void onStart(){
         super.onStart();
         Log.d("PostDialog","onStart called");
-
-        Log.d("RegisterFragment","Google connected");
         mGoogleApiClient.connect();
     }
 
@@ -217,7 +214,6 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
         if(permissionIsGranted){
             if(mGoogleApiClient.isConnected()){
 
-                Log.d("RegisterFragment","requestingLocation");
                 requestLocationUpdates();
             }
         }
