@@ -256,27 +256,31 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
     }
 
-    private void requestLocationUpdates() {
+    private void requestLocationUpdate() {
 
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(60000);
 
-        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ){
+            if(getActivity().shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            }
+            else{
+                Log.d("Request","Inside requestLocation...");
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+
             }
             return;
-        }
 
+        }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest,this);
 
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        requestLocationUpdates();
+        requestLocationUpdate();
     }
 
 
@@ -316,7 +320,8 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
         switch(requestCode){
             case MY_PERMISSIONS_REQUEST_FINE_LOCATION:
-                if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     //Permission granted
                     permissionIsGranted = true;
 

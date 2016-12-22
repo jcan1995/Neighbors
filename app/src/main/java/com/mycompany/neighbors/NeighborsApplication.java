@@ -1,5 +1,10 @@
 package com.mycompany.neighbors;
 
+import android.*;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
+
 import com.firebase.client.Firebase;
 
 /**
@@ -11,6 +16,7 @@ public class NeighborsApplication extends android.app.Application {
     public void onCreate(){
         super.onCreate();
         Firebase.setAndroidContext(this);
+
 
     }
 
