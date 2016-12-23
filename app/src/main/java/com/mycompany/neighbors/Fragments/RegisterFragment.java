@@ -1,6 +1,9 @@
 package com.mycompany.neighbors.Fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,13 +13,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.User;
 import com.mycompany.neighbors.utils.Constants;
 
 import java.util.Map;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by joshua on 5/25/2016.
@@ -25,16 +36,19 @@ import java.util.Map;
 
 public class RegisterFragment extends Fragment {
 
-    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
-    private Firebase fRef = new Firebase(FIREBASE_URL);
-
+    private FirebaseAuth mAuth;
     private EditText etUserName;
     private EditText etEmail;
     private EditText etPassword;
     private EditText etConfirmPassword;
     private Button bSubmit;
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mAuth = FirebaseAuth.getInstance();
 
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -59,7 +73,7 @@ public class RegisterFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                    registerUser();
+                registerUser();
             }
         });
 
@@ -72,39 +86,44 @@ public class RegisterFragment extends Fragment {
         final String Password = etPassword.getText().toString();
         final String ConfirmPassword = etConfirmPassword.getText().toString();
 
-             /*  if(!confirmPass(Password, ConfirmPassword)){
-
-
-               }*/
-
-
         //TODO: Check if email/username is already taken.
         //TODO: Check if email is valid "@"
         //TODO: Check if password is valid. (strong)
 
-     //   Location location = new Location("");
-        final User user = new User(Email, 0.0, 0.0, Password, UserName);//new
-        fRef.createUser(Email,Password, new Firebase.ValueResultHandler<Map<String, Object>>(){
+        //final User user = new User(Email, 0.0, 0.0, Password, UserName);
 
+        mAuth.createUserWithEmailAndPassword(Email,Password).addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
             @Override
-            public void onSuccess(Map<String, Object> result) {
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                Log.d("TAG","createUserWithEmail:onComplete:" + task.isSuccessful());
 
-                fRef.child("users").child(result.get("uid").toString()).setValue(user);
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(UserName)
+                        .build();
+
+                user.updateProfile(profileUpdates)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(TAG, "User profile updated.");
+                                }
+                            }
+                        });
 
                 Toast toast = Toast.makeText(getActivity(),"Registration Successful!", Toast.LENGTH_LONG);
                 toast.show();
 
-                LoginFragment loginFrag = new LoginFragment();
-                getFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.Container, loginFrag)
-                        .commit();
-            }
+                Intent i = new Intent(getActivity(), MainActivity.class);
+               // i.putExtra("displayName",UserName);
+                startActivity(i);
 
-            @Override
-            public void onError(FirebaseError firebaseError) {
-                Toast toast = Toast.makeText(getActivity(),"Sorry. Email is already registered.", Toast.LENGTH_LONG);
-                toast.show();
+                if(!task.isSuccessful()){
+                    Toast.makeText(getActivity(),"Registration failed", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
     }
@@ -115,11 +134,13 @@ public class RegisterFragment extends Fragment {
     public void onStart(){
         super.onStart();
         Log.d("RegisterFragment","Google connected");
+
     }
 
     @Override
     public void onStop(){
         super.onStop();
+
     }
 
     @Override

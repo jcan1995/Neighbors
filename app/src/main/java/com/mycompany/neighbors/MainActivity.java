@@ -1,10 +1,12 @@
 package com.mycompany.neighbors;
 
 import android.*;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
@@ -15,47 +17,74 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.mycompany.neighbors.Fragments.LoginFragment;
+
+import static android.content.ContentValues.TAG;
+
 
 public class MainActivity extends AppCompatActivity {
 
+    private String userName;
     private Adapter mAdapter;
     private ViewPager mViewPager;
 
-    private static String mApplicationUserUID;
+    private FirebaseUser currentUser;
     private Intent intent;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private FirebaseAuth mAuth;
     private TabLayout mTabLayout;
-
-    public static String getUID() {
-        return mApplicationUserUID;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+//        intent = getIntent();
+//        if(intent == null){
 //
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                Log.d("Request","Inside requestLocation...");
-//                requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
-//            }
-//            return;
+//            Toast toast = Toast.makeText(this,"intent is null",Toast.LENGTH_LONG);
+//            toast.show();
 //        }
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-
-//        ImageButton imageButton = (ImageButton)toolbar.findViewById(R.id.ibSettings);
-//        imageButton.setOnClickListener(new View.OnClickListener() {
+//        userName = getIntent().getStringExtra("displayName");
+//        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+//                .setDisplayName(userName)//get intent packgage
+//                .build();
+//
+//        currentUser.updateProfile(profileUpdates).addOnCompleteListener(new OnCompleteListener<Void>() {
 //            @Override
-//            public void onClick(View view) {
-//                Toast toast = Toast.makeText(getApplicationContext(),"imagebuttonset", Toast.LENGTH_LONG);
-//                toast.show();
+//            public void onComplete(@NonNull Task<Void> task) {
+//                if (task.isSuccessful()) {
+//                    Log.d(TAG, "User profile updated.");
+//                }
 //            }
 //        });
 
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user != null){
+                    //User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+            }
+
+        };
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         mTabLayout = (TabLayout)findViewById(R.id.tab_layout);
         mAdapter = new Adapter(getSupportFragmentManager());
@@ -90,16 +119,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mTabLayout.setupWithViewPager(mViewPager);
-        intent = getIntent();
-        mApplicationUserUID = intent.getStringExtra("uid");
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
+
         getMenuInflater().inflate(R.menu.menu_main,menu);
         menu.add(Menu.NONE,R.id.ibSettings,Menu.NONE,"Logout");
-
-
 
         return true;
     }
@@ -109,8 +135,12 @@ public class MainActivity extends AppCompatActivity {
 
         switch(item.getItemId()){
             case R.id.ibSettings:
-                Toast toast = Toast.makeText(getApplicationContext(),"imagebuttonset", Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(getApplicationContext(),"Logging out", Toast.LENGTH_SHORT);
                 toast.show();
+                FirebaseAuth.getInstance().signOut();
+                Intent i = new Intent(this, LoginActivity.class);
+                startActivity(i, ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -122,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.d("MAINACTIVITY", "onStart called");
-
+        mAuth.addAuthStateListener(mAuthListener);
     }
 
     @Override
@@ -141,8 +171,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        Log.d("MAINACTIVITY", "onStop called");
         super.onStop();
+        Log.d("MAINACTIVITY", "onStop called");
+
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+
     }
 
     @Override

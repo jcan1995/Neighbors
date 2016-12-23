@@ -50,9 +50,10 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(PostsAdapter.ViewHolder holder, int position) {
 
-        holder.tvUserName.setText(posts.get(position).getUserName());
-        holder.tvStatus.setText(posts.get(position).getStatus());
-
+        if(posts.size() > 0) {
+            holder.tvUserName.setText(posts.get(position).getUserName());
+            holder.tvStatus.setText(posts.get(position).getStatus());
+        }
     }
 
     @Override

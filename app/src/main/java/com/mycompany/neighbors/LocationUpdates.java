@@ -1,6 +1,5 @@
 package com.mycompany.neighbors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Created by joshua on 6/9/2016.
@@ -27,7 +26,6 @@ public class LocationUpdates {
     private int Longitude;
 
 
-    @JsonIgnore
     private String key;
 
     public LocationUpdates(){}

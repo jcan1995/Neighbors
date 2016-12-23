@@ -1,6 +1,5 @@
 package com.mycompany.neighbors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Created by joshua on 5/25/2016.
@@ -15,7 +14,7 @@ public class User {
     private Double Latitude;
     private Double Longitude;
 
-    @JsonIgnore
+   // @JsonIgnore
     private String key;
 
     public User(){

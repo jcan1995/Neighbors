@@ -20,15 +20,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
 import com.mycompany.neighbors.SinglePost;
@@ -45,8 +45,9 @@ import java.util.Locale;
 //TODO:8/5 Find way to post news statuses under correct cityname according to user.
 public class PostDialog extends DialogFragment implements LocationListener,GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener  {
 
+    private FirebaseDatabase database;
+    private DatabaseReference myRef;
     private GoogleApiClient mGoogleApiClient;
-    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
     private boolean permissionIsGranted = false;
     private Location usersLocation;
 
@@ -63,6 +64,8 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
         final View view = inflater.inflate(R.layout.dialog_post,null);
 
         googleApiBuilder();
+        database = FirebaseDatabase.getInstance();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Say something!");
         builder.setView(view);
@@ -72,25 +75,32 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
         builder.setPositiveButton(R.string.Post, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        String UID = MainActivity.getUID();
+
                         final String status = Post.getText().toString();
+                        SinglePost post = new SinglePost("someName",status);
+                        myRef = database.getReference(countryName).child(stateName).child(cityName).child("posts");
+                        //myRef = database.getReference(countryName + stateName + cityName + "posts");
+                        myRef.push().setValue(post);
 
-                        Firebase ref = new Firebase(FIREBASE_URL+ "users/"+ UID+"/userName");
-                       ref.addValueEventListener(new ValueEventListener() {
-                           @Override
-                           public void onDataChange(DataSnapshot dataSnapshot) {
-                               String userName = (String)dataSnapshot.getValue();
-                               SinglePost post = new SinglePost(userName,status);
 
-                               Firebase fRoot = new Firebase(FIREBASE_URL);
-                               fRoot.child(countryName).child(stateName).child(cityName).child("posts").push().setValue(post);
-                           }
 
-                           @Override
-                           public void onCancelled(FirebaseError firebaseError) {
 
-                           }
-                       }) ;
+//                        Firebase ref = new Firebase(FIREBASE_URL+ "users/"+ UID+"/userName");
+//                       ref.addValueEventListener(new ValueEventListener() {
+//                           @Override
+//                           public void onDataChange(DataSnapshot dataSnapshot) {
+//                               String userName = (String)dataSnapshot.getValue();
+//                               SinglePost post = new SinglePost(userName,status);
+//
+//                               Firebase fRoot = new Firebase(FIREBASE_URL);
+//                               fRoot.child(countryName).child(stateName).child(cityName).child("posts").push().setValue(post);
+//                           }
+//
+//                           @Override
+//                           public void onCancelled(FirebaseError firebaseError) {
+//
+//                           }
+//                       }) ;
                     }
                 });
 
@@ -116,6 +126,7 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Log.d("PostDialog","Connected to google api");
         requestLocationUpdates();
     }
 
@@ -125,7 +136,7 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(60000);
 
-        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_FINE_LOCATION);
@@ -144,6 +155,8 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
     public void onLocationChanged(Location location) {
 
         usersLocation = location;
+        Log.d("PostDialog","Latitude:"+location.getLatitude());
+        Log.d("PostDialog","Longitude:"+location.getLongitude());
 
         if(countryName == null && stateName == null && cityName == null) {
             geoCoder();
@@ -151,6 +164,7 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
     }
 
     private void geoCoder() {
+
         Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
         try {
             List<Address> addresses = geocoder.getFromLocation(usersLocation.getLatitude(),usersLocation.getLongitude(),1);
@@ -160,7 +174,6 @@ public class PostDialog extends DialogFragment implements LocationListener,Googl
 
         } catch (IOException e) {
             e.printStackTrace();
-
         }
     }
 

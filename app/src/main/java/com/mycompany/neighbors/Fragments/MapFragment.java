@@ -21,10 +21,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -36,6 +33,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
 import com.mycompany.neighbors.FragmentLifeCycle;
 import com.mycompany.neighbors.MainActivity;
 import com.mycompany.neighbors.R;
@@ -145,21 +143,22 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
         //////////////////NEW 8/24/////////////////////
 
 
-        mApplicationUserUID = MainActivity.getUID();
-        Firebase applicationUserRef = new Firebase(FIREBASE_URL + "users/"+ mApplicationUserUID);
-        applicationUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+       // mApplicationUserUID = MainActivity.getUID();
 
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                mApplicationUser = dataSnapshot.getValue(User.class);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+//        Firebase applicationUserRef = new Firebase(FIREBASE_URL + "users/"+ mApplicationUserUID);
+//        applicationUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                mApplicationUser = dataSnapshot.getValue(User.class);
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
     }
 
     @Override
@@ -255,14 +254,14 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
 
 
     private void sendUserUpdate() {
-        Log.d("MAPFRAGMENT","inside sendUserUpdate");
-
-        final Firebase userRef = new Firebase(FIREBASE_URL);
-        final User newUser = new User(mApplicationUser.getEmail(),currentLocation.getLatitude(),currentLocation.getLongitude(),mApplicationUser.getPassword(),mApplicationUser.getUserName());
-
-        userRef.child(countryName).child(stateName).child(cityName).child("currentUsers").child(mApplicationUserUID).setValue(newUser);
-
-    }
+//        Log.d("MAPFRAGMENT","inside sendUserUpdate");
+//
+//        final Firebase userRef = new Firebase(FIREBASE_URL);
+//        final User newUser = new User(mApplicationUser.getEmail(),currentLocation.getLatitude(),currentLocation.getLongitude(),mApplicationUser.getPassword(),mApplicationUser.getUserName());
+//
+//        userRef.child(countryName).child(stateName).child(cityName).child("currentUsers").child(mApplicationUserUID).setValue(newUser);
+//
+  }
 
 
     private void getUsers() {
@@ -271,42 +270,43 @@ public class MapFragment extends Fragment implements FragmentLifeCycle,OnMapRead
         //  Iterate through users in firebase and store in arraylist
         mUsers.clear();//First clear ArrayList in case it already consists of UserMarkers objects
 
-        Firebase currentUsersRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
-
-        Log.d("usersfilepath",FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
-        currentUsersRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
-            @Override
-            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-
-                User user = dataSnapshot.getValue(User.class);
-                user.setKey(dataSnapshot.getKey());
-                mUsers.add(user);// < ---- OR mUsers.add(0, post);
-                Log.d("USERARRAYSIZE","In onChildAdded: " + mUsers.size());
-
-                updateUI(mUsers);
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+//
+//        Firebase currentUsersRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
+//
+//        Log.d("usersfilepath",FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/currentUsers");
+//        currentUsersRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
+//            @Override
+//            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+//
+//                User user = dataSnapshot.getValue(User.class);
+//                user.setKey(dataSnapshot.getKey());
+//                mUsers.add(user);// < ---- OR mUsers.add(0, post);
+//                Log.d("USERARRAYSIZE","In onChildAdded: " + mUsers.size());
+//
+//                updateUI(mUsers);
+//
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
         Log.d("USERARRAYSIZE","Size of mUsers in getUsers(): " + mUsers.size());
 
     }

@@ -1,6 +1,5 @@
 package com.mycompany.neighbors;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Created by joshua on 5/29/2016.
@@ -12,7 +11,6 @@ public class SinglePost {
     private String userName;
     private String status;
 
-    @JsonIgnore
     private String key;
 
     public String getKey() {

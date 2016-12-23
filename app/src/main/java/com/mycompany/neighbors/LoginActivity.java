@@ -2,10 +2,14 @@ package com.mycompany.neighbors;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
+
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mycompany.neighbors.Fragments.LoginFragment;
 import com.mycompany.neighbors.utils.Constants;
 
@@ -13,59 +17,72 @@ import com.mycompany.neighbors.utils.Constants;
  * Created by joshua on 5/25/2016.
  */
 public class LoginActivity extends FragmentActivity {
-    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
-
-
-    @Override
-    public void onStart(){
-        super.onStart();
-       // Firebase.setAndroidContext(this);
-
-    }
-
-    public boolean isExpired(AuthData authData){
-        return (System.currentTimeMillis() / 1000) >= authData.getExpires();
-    }
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-       // Firebase.setAndroidContext(this);
 
-        ////////////////////NEW////////////////////////////////////////
-        Firebase firebase = new Firebase(FIREBASE_URL);
-        if(firebase.getAuth() == null || isExpired(firebase.getAuth())){
-            LoginFragment loginFrag = new LoginFragment();
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.Container, loginFrag)
-                    .commit();
+        Log.d("MethodCheck","onCreate/LoginActivity");
 
-       }else{
-            Intent i = new Intent(this, MainActivity.class);
-            i.putExtra("uid",firebase.getAuth().getUid());
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user != null){
+                    //The user is signed in.
+                    Intent i = new Intent(getApplication(), MainActivity.class);
+                    startActivity(i);
 
-            // i.putExtra("userURL", FIREBASE_URL + "/users" + firebase.getAuth().getUid());
-            startActivity(i);
+                    Log.d("LoginActivity","onAuthStateChanged:signed_on");
+                }else{
+                    Log.d("LoginActivity","onAuthStateChanged:signed_off");
 
-        }
-////////////////////NEW////////////////////////////////////////
-        if(findViewById(R.id.Container) != null) {
-            // if we are being restored from a previous state, then we dont need to do anything and should
-            // return or else we could end up with overlapping fragments.
-            if (savedInstanceState != null)
-                return;
+                }
+            }
+        };
 
-            LoginFragment loginFrag = new LoginFragment();
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.Container, loginFrag)
-                    .commit();
-        }
-
+        LoginFragment loginFrag = new LoginFragment();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.Container, loginFrag)
+                .commit();
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+
+    }
+
+    @Override
+    public void onRestart(){
+        super.onRestart();
+    }
 }

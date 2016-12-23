@@ -20,13 +20,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.mycompany.neighbors.Dialogs.PostDialog;
 import com.mycompany.neighbors.FragmentLifeCycle;
 import com.mycompany.neighbors.PostsAdapter;
@@ -39,10 +44,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by joshua on 7/25/2016.
  */
 public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+
+
+    private DatabaseReference myRef;
+    private FirebaseUser user;
+    private FirebaseDatabase database;
+
+    private String name;
+    private String email;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -51,7 +66,6 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
     private ArrayList<SinglePost> posts = new ArrayList<>();
     private FloatingActionButton bPost;
-    private final String FIREBASE_URL = Constants.FIREBASE_ROOT_URL;
 
     private GoogleApiClient mGoogleApiClient;
     private static Location currentLocation;
@@ -74,6 +88,20 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
         super.onCreate(savedInstanceState);
 
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference(countryName + stateName + cityName + "posts");
+
+        user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if(user == null){
+            Toast.makeText(getActivity(), "User is null",
+                    Toast.LENGTH_LONG).show();
+        }
+        else{
+            name = user.getDisplayName();
+            email = user.getEmail();
+
+        }
     }
 
     @Override
@@ -123,13 +151,12 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
             if(addresses == null) {
                 Log.d("TAG_JOSH", "addresses is null");
             }
-            Log.d("TAG_JOSH", "addresses is null");
 
             countryName = (addresses.get(0).getCountryName()).replaceAll("\\s+","");
             cityName = (addresses.get(0).getLocality()).replaceAll("\\s+","");
             stateName = (addresses.get(0).getAdminArea()).replaceAll("\\s+","");
 
-            Log.d("MapFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
+            Log.d("NewsFeedFragment","cityName: " + cityName +" stateName: " + stateName + " countryName: " + countryName);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -139,53 +166,77 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
 
     }
 
-    private void queryPosts() {
+//    private void queryPosts() {
+//
+//        Log.d("NewsFeedFragment","Inside queryPosts");
+//
+//        posts.clear();
+//        myRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                // This method is called once with the initial value and again
+//                // whenever data at this location is updated.
+//                SinglePost post = dataSnapshot.getValue(SinglePost.class);
+//                posts.add(0, post);
+//
+//                if(posts.size() > 0) {
+//                   mAdapter = new PostsAdapter(posts);
+//                   mRecyclerView.setAdapter(mAdapter);
+//                   } else{
+//                          Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
+//                          toast.show();
+//                   }
+//            }
+//
+//
+//            @Override
+//            public void onCancelled(DatabaseError error) {
+//                // Failed to read value
+//                Log.w(TAG, "Failed to read value.", error.toException());
+//            }
+//        });
 
-        Log.d("NewsFeedFragment","Inside queryPosts");
-
-        posts.clear();
-
-        Firebase postsRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/posts");
-        postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
-
-            @Override
-            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-
-                SinglePost post = dataSnapshot.getValue(SinglePost.class);
-                post.setKey(dataSnapshot.getKey());//getKey() probably returns the UID of JSON field
-
-                posts.add(0, post);
-
-                if(posts.size() > 0) {
-                   mAdapter = new PostsAdapter(posts);
-                   mRecyclerView.setAdapter(mAdapter);
-                   } else{
-                          Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
-                          toast.show();
-                   }
-            }
-
-            @Override
-            public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
+//        Firebase postsRef = new Firebase(FIREBASE_URL + countryName +"/"+ stateName + "/"+ cityName + "/posts");
+//        postsRef.addChildEventListener(new com.firebase.client.ChildEventListener() {
+//
+//            @Override
+//            public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+//
+//                SinglePost post = dataSnapshot.getValue(SinglePost.class);
+//                post.setKey(dataSnapshot.getKey());//getKey() probably returns the UID of JSON field
+//
+//                posts.add(0, post);
+//
+//                if(posts.size() > 0) {
+//                   mAdapter = new PostsAdapter(posts);
+//                   mRecyclerView.setAdapter(mAdapter);
+//                   } else{
+//                          Toast toast = Toast.makeText(getActivity(),"No data", Toast.LENGTH_SHORT);
+//                          toast.show();
+//                   }
+//            }
+//
+//            @Override
+//            public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
+    //}
 
     public void initializeScreen(View v){
 
@@ -194,6 +245,8 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
             @Override
             public void onClick(View view) {
 
+                Toast.makeText(getActivity(), "Name: " + name + "Email: " + email,
+                        Toast.LENGTH_LONG).show();
                 PostDialog postDialog = new PostDialog();
                 postDialog.show(getFragmentManager(),"TAG");
 
@@ -223,7 +276,7 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
     public void onResume(){
 
         super.onResume();
-        queryPosts();
+       // queryPosts();
         Log.d("NewsFeedFragment","onResume called");
 
     }
@@ -303,7 +356,7 @@ public class NewsFeedFragment extends Fragment implements FragmentLifeCycle,Loca
             geoCoder();
 
         if(posts.size() == 0) {
-            queryPosts();
+            //queryPosts();
         }
 
     }
