@@ -8,11 +8,11 @@
     <string name="Message">Message</string>
     <string name="Post">Post</string>
     <string name="Cancel">Cancel</string>
-
+    <string name="Username_init">Enter User Name</string>
     <string name="Register">Register</string>
     <string name="UserName">User Name</string>
     <string name="Submit">Submit</string>
-
+    <string name="Choose">Choose a photo.</string>
 
 
 </resources>

@@ -22,6 +22,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.mycompany.neighbors.Dialogs.PostDialog;
+import com.mycompany.neighbors.Dialogs.ProfileInitDialog;
 import com.mycompany.neighbors.Fragments.LoginFragment;
 
 import static android.content.ContentValues.TAG;
@@ -46,6 +48,14 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if(currentUser.getDisplayName() == null && currentUser.getPhotoUrl() == null){
+            //Create dialog fragment to set username and photo
+//            PostDialog postDialog = new PostDialog();
+//            postDialog.show(getFragmentManager(),"TAG");
+            ProfileInitDialog initDialog = new ProfileInitDialog();
+            initDialog.show(getFragmentManager(),"TAG");
+        }
 
 //        intent = getIntent();
 //        if(intent == null){
